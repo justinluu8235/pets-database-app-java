@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.pets_database_java;
+package com.example.pets;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
@@ -32,6 +32,9 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
+
+import com.example.pets.data.PetContract.PetEntry;
+import com.example.pets_database_java.R;
 
 //import com.example.android.pets.data.PetContract.PetEntry;
 //import com.example.android.pets.data.PetDbHelper;
@@ -95,11 +98,11 @@ public class EditorActivity extends AppCompatActivity {
                 String selection = (String) parent.getItemAtPosition(position);
                 if (!TextUtils.isEmpty(selection)) {
                     if (selection.equals(getString(R.string.gender_male))) {
-                        mGender = 1; // Male
+                        mGender = PetEntry.GENDER_MALE; // Male
                     } else if (selection.equals(getString(R.string.gender_female))) {
-                        mGender = 2; // Female
+                        mGender = PetEntry.GENDER_FEMALE; // Female
                     } else {
-                        mGender = 0; // Unknown
+                        mGender = PetEntry.GENDER_UNKNOWN; // Unknown
                     }
                 }
             }
