@@ -16,11 +16,13 @@
 package com.example.pets;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 //import android.support.v4.app.NavUtils;
 //import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,6 +36,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
 
 import com.example.pets.data.PetContract.PetEntry;
+import com.example.pets.data.PetDbHelper;
 import com.example.pets_database_java.R;
 
 //import com.example.android.pets.data.PetContract.PetEntry;
@@ -56,11 +59,14 @@ public class EditorActivity extends AppCompatActivity {
     /** EditText field to enter the pet's gender */
     private Spinner mGenderSpinner;
 
+    //Initialize PetDbHelper to access database
+    private PetDbHelper mDbHelper;
+
     /**
      * Gender of the pet. The possible values are:
      * 0 for unknown gender, 1 for male, 2 for female.
      */
-    private int mGender = 0;
+    private int mGender = PetEntry.GENDER_UNKNOWN;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -129,7 +135,8 @@ public class EditorActivity extends AppCompatActivity {
         switch (item.getItemId()) {
             // Respond to a click on the "Save" menu option
             case R.id.action_save:
-                // Do nothing for now
+                insertPet();
+                finish();
                 return true;
             // Respond to a click on the "Delete" menu option
             case R.id.action_delete:
@@ -143,4 +150,38 @@ public class EditorActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    //Get user input from editor, and save new pet into database
+    private void insertPet(){
+        mDbHelper = new PetDbHelper(this);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        //retrieve data from input fields
+        String nameString = mNameEditText.getText().toString().trim();
+        String breedString = mBreedEditText.getText().toString().trim();
+        int weightInt = Integer.parseInt(mWeightEditText.getText().toString().trim());
+        int genderInt = mGender;
+
+        //places info in ContentValues
+        values.put(PetEntry.COLUMN_PET_NAME, nameString);
+        values.put(PetEntry.COLUMN_PET_BREED, breedString);
+        values.put(PetEntry.COLUMN_PET_WEIGHT, weightInt);
+        values.put(PetEntry.COLUMN_PET_GENDER, genderInt);
+
+        //insert into database
+        long newRowID = db.insert(PetEntry.TABLE_NAME, null, values);
+        Log.v("CatalogActivity:", "New row ID " + newRowID);
+
+        Context context = getApplicationContext();
+        if(newRowID == -1 ){
+            Toast toast = Toast.makeText(context, "Error with saving pet", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+        else{
+            Toast toast = Toast.makeText(context, "Pet saved with id: " + newRowID, Toast.LENGTH_SHORT);
+            toast.show();
+        }
+
+    }
+
 }
