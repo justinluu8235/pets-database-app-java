@@ -27,6 +27,11 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.pets.CatalogActivity" />
         </activity>
+        <provider
+            android:authorities="com.example.pets"
+            android:name="com.example.pets.data.PetProvider"
+            android:exported="false"
+            />
     </application>
 
 </manifest>
