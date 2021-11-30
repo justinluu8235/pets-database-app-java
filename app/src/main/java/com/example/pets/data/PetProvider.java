@@ -1,10 +1,13 @@
 package com.example.pets.data;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -34,14 +37,56 @@ public class PetProvider extends ContentProvider {
     @Nullable
     @Override
     public Cursor query(@NonNull Uri uri, @Nullable String[] projection, @Nullable String selection, @Nullable String[] selectionArgs, @Nullable String sortOrder) {
-        return null;
+        //Get database
+        SQLiteDatabase database = mDbHelper.getReadableDatabase();
+        //initialize for result
+        Cursor cursor = null;
+        int match = sUriMatcher.match(uri);
+        switch(match){
+            case PETS:
+                cursor = database.query(PetContract.PetEntry.TABLE_NAME, projection, selection, selectionArgs, null, null, sortOrder);
+                break;
+            case PET_ID:
+                // For the PET_ID code, extract out the ID from the URI.
+                // For an example URI such as "content://com.example.android.pets/pets/3",
+                // the selection will be "_id=?" and the selection argument will be a
+                // String array containing the actual ID of 3 in this case.
+                //
+                // For every "?" in the selection, we need to have an element in the selection
+                // arguments that will fill in the "?". Since we have 1 question mark in the
+                // selection, we have 1 String in the selection arguments' String array.
+                selection = PetContract.PetEntry._ID + "=?";
+                selectionArgs = new String[] {String.valueOf(ContentUris.parseId(uri))};
+
+                //perform query
+                cursor = database.query(PetContract.PetEntry.TABLE_NAME, projection,selection,selectionArgs,null,null, sortOrder);
+                break;
+        }
+        return cursor;
+
     }
 
     //Insert new data into the provider with given Content values
     @Nullable
     @Override
     public Uri insert(@NonNull Uri uri, @Nullable ContentValues values) {
-        return null;
+        final int match = sUriMatcher.match(uri);
+        //wouldnt make sense to insert a pet to a specific occupied row
+        switch(match){
+            case PETS:
+                return insertPet(uri, values);
+            default:
+                throw new IllegalArgumentException("Insertion is not supported for " + uri);
+        }
+    }
+    private Uri insertPet(Uri uri, ContentValues values){
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        long newRowID = db.insert(PetContract.PetEntry.TABLE_NAME, null, values);
+        if (newRowID == -1) {
+
+            return null;
+        }
+        return ContentUris.withAppendedId(uri, newRowID);
     }
 
     //delete data at given selection and selection arguments
