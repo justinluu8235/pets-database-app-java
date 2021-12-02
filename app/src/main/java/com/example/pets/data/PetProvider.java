@@ -80,6 +80,10 @@ public class PetProvider extends ContentProvider {
         }
     }
     private Uri insertPet(Uri uri, ContentValues values){
+        //Data validation
+        validateData(values);
+
+        //Process to insert into database using PetDbHelper
         SQLiteDatabase db = mDbHelper.getWritableDatabase();
         long newRowID = db.insert(PetContract.PetEntry.TABLE_NAME, null, values);
         if (newRowID == -1) {
@@ -92,19 +96,80 @@ public class PetProvider extends ContentProvider {
     //delete data at given selection and selection arguments
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
-        return 0;
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        int numsRowsDeleted;
+        final int match = sUriMatcher.match(uri);
+        switch(match){
+            case(PETS):
+                numsRowsDeleted = db.delete(PetContract.PetEntry.TABLE_NAME,selection,selectionArgs);
+                return numsRowsDeleted;
+            case(PET_ID):
+                selection = PetContract.PetEntry._ID;
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                numsRowsDeleted = db.delete(PetContract.PetEntry.TABLE_NAME,selection,selectionArgs);
+                return numsRowsDeleted;
+            default:
+                throw new IllegalArgumentException("Deleting failed");
+        }
     }
 
     //Uopdate data at given selection and selection Arg with new Content values
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values, @Nullable String selection, @Nullable String[] selectionArgs) {
-        return 0;
+        validateData(values);
+        SQLiteDatabase db = mDbHelper.getWritableDatabase();
+        int numRowsUpdated = 0;
+        final int match = sUriMatcher.match(uri);
+        switch(match) {
+            case (PETS):
+                numRowsUpdated = db.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+                return numRowsUpdated;
+            case (PET_ID):
+                selection = PetContract.PetEntry._ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                numRowsUpdated = db.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+                return numRowsUpdated;
+            default:
+                throw new IllegalArgumentException("Updating failed");
+        }
+
     }
 
     //Return the MIME type of data for the content URI
     @Nullable
     @Override
     public String getType(@NonNull Uri uri) {
-        return null;
+        final int match = sUriMatcher.match(uri);
+        switch (match) {
+            case PETS:
+                return PetContract.PetEntry.CONTENT_LIST_TYPE;
+            case PET_ID:
+                return PetContract.PetEntry.CONTENT_ITEM_TYPE;
+            default:
+                throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
+        }
     }
+
+    private void validateData(ContentValues values){
+        //Data validation
+        String name = values.getAsString(PetContract.PetEntry.COLUMN_PET_NAME);
+        if (name == null) {
+            throw new IllegalArgumentException("Pet requires a name");
+        }
+
+        Integer gender = values.getAsInteger(PetContract.PetEntry.COLUMN_PET_GENDER);
+        if(gender == null || gender != PetContract.PetEntry.GENDER_FEMALE || gender != PetContract.PetEntry.GENDER_MALE ||
+                gender != PetContract.PetEntry.GENDER_UNKNOWN){
+            throw new IllegalArgumentException("Gender Selection Invalid");
+        }
+
+        Integer weight = values.getAsInteger(PetContract.PetEntry.COLUMN_PET_WEIGHT);
+        if(weight < 0 && weight != null){
+            throw new IllegalArgumentException("Weight can not be negative");
+        }
+    }
+
+
+
+
 }

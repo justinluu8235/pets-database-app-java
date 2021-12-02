@@ -42,7 +42,7 @@ import com.example.pets.data.PetDbHelper;
  */
 public class CatalogActivity extends AppCompatActivity {
 
-    private PetDbHelper mDbHelper;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +60,7 @@ public class CatalogActivity extends AppCompatActivity {
         });
         // To access our database, we instantiate our subclass of SQLiteOpenHelper
         // and pass the context, which is the current activity.
-        mDbHelper = new PetDbHelper(this);
+
         displayDatabaseInfo();
     }
 
@@ -144,6 +144,7 @@ public class CatalogActivity extends AppCompatActivity {
             // Respond to a click on the "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
                 insertPet();
+
                 displayDatabaseInfo();
                 return true;
             // Respond to a click on the "Delete all entries" menu option
