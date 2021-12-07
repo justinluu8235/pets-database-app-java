@@ -61,7 +61,15 @@ public class PetProvider extends ContentProvider {
                 //perform query
                 cursor = database.query(PetContract.PetEntry.TABLE_NAME, projection,selection,selectionArgs,null,null, sortOrder);
                 break;
+            default:
+                throw new IllegalArgumentException("Cannot query unknown URI " + uri);
         }
+        //Set notification URI on the Cursor, so we know what content URI the cursor was created for
+        //If data at this URI changes, then we know we need to update the cursor
+
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+
+
         return cursor;
 
     }
@@ -90,6 +98,10 @@ public class PetProvider extends ContentProvider {
 
             return null;
         }
+
+        //Notify all listeners that the data has changed for the pet content URI
+        getContext().getContentResolver().notifyChange(uri, null);
+
         return ContentUris.withAppendedId(uri, newRowID);
     }
 
@@ -102,11 +114,15 @@ public class PetProvider extends ContentProvider {
         switch(match){
             case(PETS):
                 numsRowsDeleted = db.delete(PetContract.PetEntry.TABLE_NAME,selection,selectionArgs);
+                //Notify all listeners that the data has changed for the pet content URI
+                getContext().getContentResolver().notifyChange(uri, null);
                 return numsRowsDeleted;
             case(PET_ID):
                 selection = PetContract.PetEntry._ID;
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 numsRowsDeleted = db.delete(PetContract.PetEntry.TABLE_NAME,selection,selectionArgs);
+                //Notify all listeners that the data has changed for the pet content URI
+                getContext().getContentResolver().notifyChange(uri, null);
                 return numsRowsDeleted;
             default:
                 throw new IllegalArgumentException("Deleting failed");
@@ -123,11 +139,15 @@ public class PetProvider extends ContentProvider {
         switch(match) {
             case (PETS):
                 numRowsUpdated = db.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+                //Notify all listeners that the data has changed for the pet content URI
+                getContext().getContentResolver().notifyChange(uri, null);
                 return numRowsUpdated;
             case (PET_ID):
                 selection = PetContract.PetEntry._ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 numRowsUpdated = db.update(PetContract.PetEntry.TABLE_NAME, values, selection, selectionArgs);
+                //Notify all listeners that the data has changed for the pet content URI
+                getContext().getContentResolver().notifyChange(uri, null);
                 return numRowsUpdated;
             default:
                 throw new IllegalArgumentException("Updating failed");
@@ -158,7 +178,7 @@ public class PetProvider extends ContentProvider {
         }
 
         Integer gender = values.getAsInteger(PetContract.PetEntry.COLUMN_PET_GENDER);
-        if(gender == null || gender != PetContract.PetEntry.GENDER_FEMALE || gender != PetContract.PetEntry.GENDER_MALE ||
+        if(gender == null || gender != PetContract.PetEntry.GENDER_FEMALE && gender != PetContract.PetEntry.GENDER_MALE &&
                 gender != PetContract.PetEntry.GENDER_UNKNOWN){
             throw new IllegalArgumentException("Gender Selection Invalid");
         }
